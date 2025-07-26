@@ -22,6 +22,12 @@ export default {
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
     "port": Number(process.env.DB_PORT),
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
   }
 }
