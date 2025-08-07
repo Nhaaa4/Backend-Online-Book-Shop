@@ -6,6 +6,17 @@ const { Order, CartItem, Book, User, Author } = db
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const currency = "usd";
 
+export async function getNumberOfOrders(req, res) {
+  try {
+    const count = await Order.count();
+
+    res.json({ success: true, data: count });
+  } catch (error) {
+    console.error("Get Number of Orders error:", error.message);
+    res.status(500).json({ success: false, message: 'Server error: Get Number of Orders' });
+  }
+}
+
 export async function placeOrder(req, res) {
   const { items, totalAmount, village_id } = req.body;
   const userId = req.user.id; 

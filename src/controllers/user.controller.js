@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import validator from 'validator'
 import { col, fn } from 'sequelize'
+import role from '../db/models/role.js'
 
 const { User, Order } = db
 
@@ -57,7 +58,7 @@ export async function register(req, res) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
     
-        const newUser = await User.create({ first_name, last_name, email, password: hashedPassword, phone_number });
+        const newUser = await User.create({ first_name, last_name, email, password: hashedPassword, phone_number, role_id: 2 });
         const token = createToken(newUser.id);
         res.status(201).json({ success: true, message: "User registered successfully", token });
     } catch (error) {
@@ -99,5 +100,20 @@ export const getUserData = async (req, res) => {
   } catch (error) {
     console.error("Failed to fetch user data:", error)
     res.status(500).json({ success: false, message: "Failed to fetch user data", error: error.message })
+  }
+}
+
+export async function getNumberOfCustomer(req, res) {
+  try {
+    const count = await User.count({
+      where: {
+        role_id: 2
+      }
+    });
+
+    res.json({ success: true, data: { count } });
+  } catch (error) {
+    console.error("Get Number of Customer error:", error.message);
+    res.status(500).json({ success: false, message: 'Server error: Get Number of Customer' });
   }
 }

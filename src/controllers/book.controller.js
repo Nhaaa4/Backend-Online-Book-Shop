@@ -102,3 +102,18 @@ export async function getBookById(req, res) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 }
+
+export async function getNumberOfBook(req, res) {
+  try {
+    const count = await Book.count();
+
+    if (count === 0) {
+      return res.status(404).json({ success: false, message: 'No books found' });
+    }
+
+    res.json({ success: true, data: count });
+  } catch (error) {
+    console.error("Get Number of Book error:", error.message);
+    res.status(500).json({ success: false, message: 'Server error: Get Number of Book' });
+  }
+}
