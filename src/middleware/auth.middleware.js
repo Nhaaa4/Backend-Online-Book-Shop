@@ -4,7 +4,8 @@ import db from "../db/models/index.js";
 const { User, Role, Permission } = db;
 
 export const authUser = async (req, res, next) => {
-  const token = req.headers.token;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : req.headers.token;
 
   if (!token) {
     return res.status(401).json({ success: false, message: "No token provided" });
@@ -61,6 +62,11 @@ export function isSuperAdmin(req, res, next) {
 
 export function authorize(...requiredPermissions) {
   return (req, res, next) => {
+    // Allow superadmin (role_id: 1) to bypass all permission checks
+    if (req.user?.role_id === 1) {
+      return next();
+    }
+
     const userPermissions = req.user?.permissions || [];
 
     const hasPermission = requiredPermissions.some(p =>
@@ -68,7 +74,7 @@ export function authorize(...requiredPermissions) {
     );
 
     if (!hasPermission) {
-      return res.status(403).json({ success: false, message: 'Permission Access Daneid' });
+      return res.status(403).json({ success: false, message: 'Permission Access Denied' });
     }
 
     next();

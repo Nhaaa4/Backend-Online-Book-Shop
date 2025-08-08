@@ -72,7 +72,7 @@ npm start
 
 The server will run on `http://localhost:3000`
 
-## 📚 API Documentation
+## 📚 API Endpoints Documentation
 
 ### Base URL
 ```
@@ -85,11 +85,15 @@ Include the JWT token in the request headers:
 token: your_jwt_token_here
 ```
 
+**Legend:**
+- 🔒 = Requires authentication token
+- 👑 = Requires specific permissions
+
 ---
 
-## 👤 User Management
+## 👤 User Management Endpoints
 
-### Register User
+### 1. Register User
 ```http
 POST /api/users/register
 ```
@@ -105,16 +109,16 @@ POST /api/users/register
 }
 ```
 
-**Response:**
+**Response (201):**
 ```json
 {
   "success": true,
   "message": "User registered successfully",
-  "token": "jwt_token_here"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-### Login User
+### 2. Login User
 ```http
 POST /api/users/login
 ```
@@ -127,42 +131,71 @@ POST /api/users/login
 }
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
   "message": "Login successful",
-  "token": "jwt_token_here"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-### Get User Profile
+### 3. Get User Profile 🔒
 ```http
 GET /api/users/profile
 ```
+
 **Headers:** `token: jwt_token`
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
   "data": {
+    "id": 1,
     "fullName": "John Doe",
     "email": "john.doe@example.com",
+    "phone_number": "0123456789",
     "joinDate": "2024-01-15T10:30:00.000Z",
     "totalOrders": 5,
-    "totalSpent": 129.99
+    "totalSpent": 129.99,
+    "role": "customer"
   }
 }
 ```
 
-### Get Number of Customers
+### 4. Update User Profile 🔒
+```http
+PUT /api/users/profile
+```
+
+**Headers:** `token: jwt_token`
+
+**Request Body:**
+```json
+{
+  "first_name": "John",
+  "last_name": "Smith",
+  "phone_number": "0987654321"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully"
+}
+```
+
+### 5. Get Number of Customers 🔒👑
 ```http
 GET /api/users/number
 ```
+
 **Headers:** `token: jwt_token` (requires `select.user` permission)
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -172,16 +205,47 @@ GET /api/users/number
 }
 ```
 
+### 6. Get All Users 🔒👑
+```http
+GET /api/users
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com",
+      "phone_number": "0123456789",
+      "role": "customer",
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
 ---
 
-## 📖 Book Management
+## 📖 Book Management Endpoints
 
-### Get All Books
+### 1. Get All Books
 ```http
 GET /api/books
 ```
 
-**Response:**
+**Query Parameters (Optional):**
+- `category`: Filter by category ID
+- `search`: Search in title/author
+- `limit`: Number of results (default: 50)
+- `offset`: Pagination offset
+
+**Response (200):**
 ```json
 {
   "success": true,
@@ -189,16 +253,20 @@ GET /api/books
     {
       "id": 1,
       "title": "Learning JavaScript",
-      "price": 19.99,
+      "isbn": "9781234567897",
+      "description": "A comprehensive guide to modern JavaScript development",
+      "price": "19.99",
       "stock_quantity": 10,
       "image_url": "https://example.com/image.jpg",
-      "averageRating": 4.5,
-      "totalReviews": 25,
+      "averageRating": "4.5",
+      "totalReviews": "25",
       "Author": {
+        "id": 1,
         "first_name": "John",
         "last_name": "Doe"
       },
       "Category": {
+        "id": 1,
         "category_name": "Programming"
       }
     }
@@ -206,31 +274,33 @@ GET /api/books
 }
 ```
 
-### Get Book by ID
+### 2. Get Book by ID
 ```http
 GET /api/books/:id
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
   "data": {
     "id": 1,
     "title": "Learning JavaScript",
-    "description": "A comprehensive guide to modern JavaScript development",
-    "price": 19.99,
+    "isbn": "9781234567897",
+    "description": "A comprehensive guide to modern JavaScript development covering ES6+, async programming, DOM manipulation, and modern frameworks.",
+    "price": "19.99",
     "stock_quantity": 10,
     "image_url": "https://example.com/image.jpg",
-    "isbn": "9781234567897",
     "Author": {
+      "id": 1,
       "first_name": "John",
       "last_name": "Doe"
     },
     "Category": {
+      "id": 1,
       "category_name": "Programming"
     },
-    "rating": 4.5,
+    "rating": "4.5",
     "totalReviews": 25,
     "ratingDistribution": [
       {
@@ -242,18 +312,102 @@ GET /api/books/:id
         "rating": 4,
         "total": 8,
         "percentage": 32
+      },
+      {
+        "rating": 3,
+        "total": 2,
+        "percentage": 8
       }
     ]
   }
 }
 ```
 
-### Get All Categories
+### 3. Create Book 🔒👑
+```http
+POST /api/books
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Request Body:**
+```json
+{
+  "title": "Advanced React Patterns",
+  "isbn": "9781234567890",
+  "description": "Master advanced React patterns and techniques",
+  "price": 29.99,
+  "stock_quantity": 50,
+  "image_url": "https://example.com/react-book.jpg",
+  "author_id": 1,
+  "category_id": 1
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Book created successfully",
+  "data": {
+    "id": 2,
+    "title": "Advanced React Patterns",
+    "isbn": "9781234567890",
+    "description": "Master advanced React patterns and techniques",
+    "price": "29.99",
+    "stock_quantity": 50,
+    "image_url": "https://example.com/react-book.jpg",
+    "author_id": 1,
+    "category_id": 1
+  }
+}
+```
+
+### 4. Update Book 🔒👑
+```http
+PUT /api/books/:id
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Request Body:**
+```json
+{
+  "title": "Advanced React Patterns (2nd Edition)",
+  "price": 34.99,
+  "stock_quantity": 75
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Book updated successfully"
+}
+```
+
+### 5. Delete Book 🔒👑
+```http
+DELETE /api/books/:id
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Book deleted successfully"
+}
+```
+
+### 6. Get All Categories
 ```http
 GET /api/books/categories
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -262,17 +416,48 @@ GET /api/books/categories
       "id": 1,
       "category_name": "Programming",
       "description": "Books about coding and software development"
+    },
+    {
+      "id": 2,
+      "category_name": "Data Science",
+      "description": "Books about data analysis and machine learning"
     }
   ]
 }
 ```
 
-### Get Number of Books
+### 7. Get All Authors
+```http
+GET /api/books/authors
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "biography": "Experienced software developer and author"
+    },
+    {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "biography": "Data scientist and AI researcher"
+    }
+  ]
+}
+```
+
+### 8. Get Number of Books
 ```http
 GET /api/books/number
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -282,12 +467,13 @@ GET /api/books/number
 
 ---
 
-## 🛒 Order Management
+## 🛒 Order Management Endpoints
 
-### Place Order (Cash Payment)
+### 1. Place Order (Cash Payment) 🔒
 ```http
 POST /api/orders/place-order
 ```
+
 **Headers:** `token: jwt_token`
 
 **Request Body:**
@@ -302,18 +488,20 @@ POST /api/orders/place-order
 }
 ```
 
-**Response:**
+**Response (201):**
 ```json
 {
   "success": true,
-  "message": "Order placed successfully"
+  "message": "Order placed successfully",
+  "orderId": 1
 }
 ```
 
-### Place Order (Stripe Payment)
+### 2. Place Order (Stripe Payment) 🔒
 ```http
 POST /api/orders/place-order-stripe
 ```
+
 **Headers:** `token: jwt_token`
 
 **Request Body:**
@@ -328,21 +516,23 @@ POST /api/orders/place-order-stripe
 }
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
-  "session_url": "https://checkout.stripe.com/pay/session_id"
+  "session_url": "https://checkout.stripe.com/pay/cs_test_123...",
+  "orderId": 1
 }
 ```
 
-### Verify Stripe Payment
+### 3. Verify Stripe Payment 🔒
 ```http
 POST /api/orders/verify-payment?orderId=123&success=true
 ```
+
 **Headers:** `token: jwt_token`
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -350,30 +540,40 @@ POST /api/orders/verify-payment?orderId=123&success=true
 }
 ```
 
-### Get Order History
+### 4. Get Order History 🔒
 ```http
 GET /api/orders/history
 ```
+
 **Headers:** `token: jwt_token`
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
   "data": [
     {
       "id": 1,
+      "order_id": "ORD-001",
       "date": "2024-01-15T10:30:00.000Z",
-      "status": "pending",
-      "total": 65.97,
-      "paymentStatus": false,
-      "paymentMethod": "cash",
+      "order_status": "pending",
+      "total": "65.97",
+      "payment_status": false,
+      "payment_method": "cash",
       "items": [
         {
           "title": "Learning JavaScript",
           "author": "John Doe",
-          "price": 19.99,
-          "quantity": 2
+          "price": "19.99",
+          "quantity": 2,
+          "image_url": "https://example.com/image.jpg"
+        },
+        {
+          "title": "React Fundamentals",
+          "author": "Jane Smith",
+          "price": "25.99",
+          "quantity": 1,
+          "image_url": "https://example.com/react.jpg"
         }
       ]
     }
@@ -381,12 +581,71 @@ GET /api/orders/history
 }
 ```
 
-### Get Number of Orders
+### 5. Get All Orders 🔒👑
+```http
+GET /api/orders
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Query Parameters (Optional):**
+- `status`: Filter by order status
+- `payment_method`: Filter by payment method
+- `limit`: Number of results
+- `offset`: Pagination offset
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "order_id": "ORD-001",
+      "user_id": 1,
+      "order_status": "pending",
+      "total_amount": "65.97",
+      "payment_status": false,
+      "payment_method": "cash",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "User": {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com"
+      }
+    }
+  ]
+}
+```
+
+### 6. Update Order Status 🔒👑
+```http
+PUT /api/orders/:id/status
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Request Body:**
+```json
+{
+  "status": "shipped"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Order status updated successfully"
+}
+```
+
+### 7. Get Number of Orders
 ```http
 GET /api/orders/number
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -396,12 +655,13 @@ GET /api/orders/number
 
 ---
 
-## ⭐ Review Management
+## ⭐ Review Management Endpoints
 
-### Add Review
+### 1. Add Review 🔒
 ```http
 POST /api/reviews
 ```
+
 **Headers:** `token: jwt_token`
 
 **Request Body:**
@@ -409,11 +669,11 @@ POST /api/reviews
 {
   "book_id": 1,
   "rating": 5,
-  "comment": "Excellent book for learning JavaScript!"
+  "comment": "Excellent book for learning JavaScript! Highly recommended."
 }
 ```
 
-**Response:**
+**Response (201):**
 ```json
 {
   "success": true,
@@ -423,17 +683,22 @@ POST /api/reviews
     "book_id": 1,
     "user_id": 1,
     "rating": 5,
-    "comment": "Excellent book for learning JavaScript!"
+    "comment": "Excellent book for learning JavaScript! Highly recommended.",
+    "createdAt": "2024-01-15T10:30:00.000Z"
   }
 }
 ```
 
-### Get Reviews by Book
+### 2. Get Reviews by Book
 ```http
 GET /api/reviews/:bookId
 ```
 
-**Response:**
+**Query Parameters (Optional):**
+- `limit`: Number of reviews (default: 20)
+- `offset`: Pagination offset
+
+**Response (200):**
 ```json
 {
   "success": true,
@@ -444,21 +709,34 @@ GET /api/reviews/:bookId
       "comment": "Excellent book for learning JavaScript!",
       "createdAt": "2024-01-15T10:30:00.000Z",
       "User": {
+        "id": 1,
         "first_name": "John",
         "last_name": "Doe"
+      }
+    },
+    {
+      "id": 2,
+      "rating": 4,
+      "comment": "Good book, well structured content.",
+      "createdAt": "2024-01-14T15:20:00.000Z",
+      "User": {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith"
       }
     }
   ]
 }
 ```
 
-### Get User's Reviews
+### 3. Get User's Reviews 🔒
 ```http
 GET /api/reviews/my-reviews
 ```
+
 **Headers:** `token: jwt_token`
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -469,7 +747,9 @@ GET /api/reviews/my-reviews
       "comment": "Great book!",
       "createdAt": "2024-01-15T10:30:00.000Z",
       "Book": {
+        "id": 1,
         "title": "Learning JavaScript",
+        "image_url": "https://example.com/image.jpg",
         "Author": {
           "first_name": "John",
           "last_name": "Doe"
@@ -480,12 +760,50 @@ GET /api/reviews/my-reviews
 }
 ```
 
-### Get Rating Distribution
+### 4. Update Review 🔒
+```http
+PUT /api/reviews/:id
+```
+
+**Headers:** `token: jwt_token`
+
+**Request Body:**
+```json
+{
+  "rating": 4,
+  "comment": "Updated review: Still a good book!"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Review updated successfully"
+}
+```
+
+### 5. Delete Review 🔒
+```http
+DELETE /api/reviews/:id
+```
+
+**Headers:** `token: jwt_token`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Review deleted successfully"
+}
+```
+
+### 6. Get Rating Distribution
 ```http
 GET /api/reviews/:bookId/rating-distribution
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -499,6 +817,11 @@ GET /api/reviews/:bookId/rating-distribution
       "rating": 4,
       "count": 8,
       "percentage": 32
+    },
+    {
+      "rating": 3,
+      "count": 2,
+      "percentage": 8
     }
   ]
 }
@@ -506,28 +829,33 @@ GET /api/reviews/:bookId/rating-distribution
 
 ---
 
-## 📍 Address Management
+## 📍 Address Management Endpoints
 
-### Get User Address
+### 1. Get User Address 🔒
 ```http
 GET /api/address/user
 ```
+
 **Headers:** `token: jwt_token`
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
   "data": {
     "village_id": 123,
     "Village": {
-      "village_name": "Village Name",
+      "id": 123,
+      "village_name": "Boeung Keng Kang 1",
       "Commune": {
-        "commune_name": "Commune Name",
+        "id": 45,
+        "commune_name": "Boeung Keng Kang",
         "District": {
-          "district_name": "District Name",
+          "id": 12,
+          "district_name": "Chamkar Mon",
           "Province": {
-            "province_name": "Province Name"
+            "id": 1,
+            "province_name": "Phnom Penh"
           }
         }
       }
@@ -536,12 +864,34 @@ GET /api/address/user
 }
 ```
 
-### Get Provinces
+### 2. Update User Address 🔒
+```http
+PUT /api/address/user
+```
+
+**Headers:** `token: jwt_token`
+
+**Request Body:**
+```json
+{
+  "village_id": 456
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Address updated successfully"
+}
+```
+
+### 3. Get Provinces
 ```http
 GET /api/address/provinces
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
@@ -549,17 +899,28 @@ GET /api/address/provinces
     {
       "id": 1,
       "province_name": "Phnom Penh"
+    },
+    {
+      "id": 2,
+      "province_name": "Siem Reap"
+    },
+    {
+      "id": 3,
+      "province_name": "Battambang"
     }
   ]
 }
 ```
 
-### Get Districts
+### 4. Get Districts
 ```http
 GET /api/address/districts?province_id=1
 ```
 
-**Response:**
+**Query Parameters:**
+- `province_id` (required): Province ID
+
+**Response (200):**
 ```json
 {
   "success": true,
@@ -568,23 +929,36 @@ GET /api/address/districts?province_id=1
       "id": 1,
       "district_name": "Chamkar Mon",
       "province_id": 1
+    },
+    {
+      "id": 2,
+      "district_name": "Daun Penh",
+      "province_id": 1
     }
   ]
 }
 ```
 
-### Get Communes
+### 5. Get Communes
 ```http
 GET /api/address/communes?district_id=1
 ```
 
-**Response:**
+**Query Parameters:**
+- `district_id` (required): District ID
+
+**Response (200):**
 ```json
 {
   "success": true,
   "data": [
     {
       "id": 1,
+      "commune_name": "Boeung Keng Kang",
+      "district_id": 1
+    },
+    {
+      "id": 2,
       "commune_name": "Tonle Bassac",
       "district_id": 1
     }
@@ -592,22 +966,95 @@ GET /api/address/communes?district_id=1
 }
 ```
 
-### Get Villages
+### 6. Get Villages
 ```http
 GET /api/address/villages?commune_id=1
 ```
 
-**Response:**
+**Query Parameters:**
+- `commune_id` (required): Commune ID
+
+**Response (200):**
 ```json
 {
   "success": true,
   "data": [
     {
       "id": 1,
-      "village_name": "Village 1",
+      "village_name": "Boeung Keng Kang 1",
+      "commune_id": 1
+    },
+    {
+      "id": 2,
+      "village_name": "Boeung Keng Kang 2",
       "commune_id": 1
     }
   ]
+}
+```
+
+---
+
+## 📊 Analytics Endpoints 🔒👑
+
+### 1. Get Dashboard Statistics
+```http
+GET /api/analytics/dashboard
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalUsers": 150,
+    "totalBooks": 75,
+    "totalOrders": 230,
+    "totalRevenue": "15749.50",
+    "monthlyOrders": [
+      { "month": "Jan", "orders": 45 },
+      { "month": "Feb", "orders": 52 }
+    ],
+    "topSellingBooks": [
+      {
+        "id": 1,
+        "title": "Learning JavaScript",
+        "totalSold": 89
+      }
+    ]
+  }
+}
+```
+
+### 2. Get Sales Report
+```http
+GET /api/analytics/sales?period=monthly
+```
+
+**Headers:** `token: jwt_token` (admin only)
+
+**Query Parameters:**
+- `period`: daily, weekly, monthly, yearly
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "period": "monthly",
+    "totalRevenue": "15749.50",
+    "totalOrders": 230,
+    "averageOrderValue": "68.48",
+    "breakdown": [
+      {
+        "date": "2024-01",
+        "revenue": "7842.30",
+        "orders": 115
+      }
+    ]
+  }
 }
 ```
 
